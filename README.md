@@ -1,1 +1,1 @@
-# Elasticsearch Kibana
+# Search Suggestion
