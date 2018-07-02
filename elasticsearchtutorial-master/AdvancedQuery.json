@@ -1,0 +1,353 @@
+PUT /proximity/default/1
+{
+  "title": "Spicy Sauce"
+}
+PUT /proximity/default/2
+{
+  "title": "Spicy Tomato Sauce"
+}
+PUT /proximity/default/3
+{
+  "title": "Spicy Tomato and Garlic Sauce"
+}
+PUT /proximity/default/4
+{
+  "title": "Tomato Sauce (spicy)"
+}
+PUT /proximity/default/5
+{
+  "title": "Spicy and very delicious Tomato Sauce"
+}
+
+#Adding the slop parameter to a match_phrase query
+GET /proximity/default/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": {
+        "query": "spicy sauce",
+        "slop": 1
+      }
+    }
+  }
+}
+GET /proximity/default/_search
+{
+  "query": {
+    "match_phrase": {
+      "title": {
+        "query": "spicy sauce",
+        "slop": 2
+      }
+    }
+  }
+}
+
+#A simple match query within a bool query
+GET /proximity/default/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": {
+              "query": "spicy sauce"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+#Boosting relevance based on proximity
+GET /proximity/default/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": {
+              "query": "spicy sauce"
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "match_phrase": {
+            "title": {
+              "query": "spicy sauce"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+#Adding the slop parameter
+GET /proximity/default/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": {
+              "query": "spicy sauce"
+            }
+          }
+        }
+      ],
+      "should": [
+        {
+          "match_phrase": {
+            "title": {
+              "query": "spicy sauce",
+              "slop": 5
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+####Fuzzy match query####
+#Searching with fuzziness set to auto
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "l0bster",
+        "fuzziness": "auto"
+      }
+    }
+  }
+}
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "lobster",
+        "fuzziness": "auto"
+      }
+    }
+  }
+}
+#Fuzziness is per term (and specifying an integer)
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "l0bster love",
+        "operator": "and",
+        "fuzziness": 1
+      }
+    }
+  }
+}
+#Switching letters around with transpositions
+GET /product/default/_search
+{
+  "query": {
+    "match": {
+      "name": {
+        "query": "lvie",
+        "fuzziness": 1
+      }
+    }
+  }
+}
+
+#fuzzy query
+GET /product/default/_search
+{
+  "query": {
+    "fuzzy": {
+      "name": {
+        "value": "lobster",
+        "fuzziness": "auto"
+      }
+    }
+  }
+}
+
+####Adding synonyms
+#Creating index with custom analyzer
+PUT /synonyms
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym",
+          "synonyms": [
+            "awful => terrible",
+            "awesome => great, super",
+            "elasticsearch, logstash, kibana => elk",
+            "weird, strange"
+          ]
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_test"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "default": {
+      "properties": {
+        "description": {
+          "type": "text",
+          "analyzer": "my_analyzer"
+        }
+      }
+    }
+  }
+}
+#Testing the analyzer (with synonyms)
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "awesome"
+}
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch"
+}
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "weird"
+}
+POST /synonyms/_analyze
+{
+  "analyzer": "my_analyzer",
+  "text": "Elasticsearch is awesome, but can also seem weird sometimes."
+}
+#Adding a test document
+POST /synonyms/default
+{
+  "description": "Elasticsearch is awesome, but can also seem weird sometimes."
+}
+#Searching the index for synonyms
+GET /synonyms/default/_search
+{
+  "query": {
+    "match": {
+      "description": "great"
+    }
+  }
+}
+GET /synonyms/default/_search
+{
+  "query": {
+    "match": {
+      "description": "awesome"
+    }
+  }
+}
+
+###Thai Language Test
+PUT /thai_test
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "synonym_test": {
+          "type": "synonym",
+          "synonyms": [
+            "องค์กร => บริษัท, ธุรกิจ",
+            "รัก, ชื่นชอบ, ชื่นชม"
+          ]
+        },
+        "thai_stop" : {
+          "type" : "stop",
+          "stopwords" : "_thai_"
+        }
+      },
+      "analyzer": {
+        "p4f_analyzer": {
+          "type": "custom",
+          "tokenizer": "thai",
+          "char_filter": [
+            "html_strip"
+          ],
+          "filter": [
+            "standard",
+            "lowercase",
+            "trim",
+            "synonym_test",
+            "thai_stop"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "default": {
+      "properties": {
+        "description": {
+          "type": "text",
+          "analyzer": "p4f_analyzer"
+        }
+      }
+    }
+  }
+}
+
+POST /thai_test/_analyze
+{
+  "analyzer": "p4f_analyzer",
+  "text": "ก็กูรักบริษัทของกูอ่ะ ใครจะทำไม"
+}
+
+#Adding a test document
+POST /thai_test/default/1
+{
+  "description": "ก็กูรักบริษัทของกูอ่ะ ใครจะทำไม"
+}
+#Matching the document with the base word (work)
+GET /thai_test/default/_search
+{
+  "query": {
+    "match": {
+      "description": "ชื่นชอบ ธุรกิจ"
+    }
+  }
+}
+#The query is stemmed, so the document still matches
+GET /thai_test/default/_search
+{
+  "query": {
+    "match": {
+      "description": "ชื่นชม องค์กร"
+    }
+  }
+}
+#Synonyms and stemmed words are still highlighted
+GET /stemming_test/default/_search
+{
+  "query": {
+    "match": {
+      "description": "ชื่นชม องค์กร"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "description": {}
+    }
+  }
+}

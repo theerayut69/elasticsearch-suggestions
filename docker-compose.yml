@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ".:/var/www/html"
+      - "./config/site.conf:/etc/nginx/nginx.conf"
+  
+  elasticsearch:
+    image: elasticsearch:latest
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+  
+  kibana:
+    image: kibana:latest
+    ports:
+      - "5601:5601"
+    

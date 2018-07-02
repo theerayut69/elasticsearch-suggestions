@@ -1,0 +1,139 @@
+GET get-group/default/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "description": {
+              "query": "elasticsearch big data"
+            }
+          }
+        },
+        {
+          "match": {
+            "name": {
+              "query": "elasticsearch big data"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET get-group/default/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "description": {
+              "query": "elasticsearch big data",
+              "boost": 2.5
+            }
+          }
+        },
+        {
+          "match": {
+            "name": {
+              "query": "elasticsearch big data"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+
+GET get-group/default/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "elasticsearch big data",
+      "fields": ["name^3", "description"]
+    }
+  }
+}
+
+GET get-group/default/_search
+{
+  "query": {
+    "query_string": {
+      "query": "elasticsearch^3 AND big data"
+    }
+  }
+}
+
+GET get-group/default/_search
+{
+  "query": {
+    "match": {
+      "description": "elasticsearch"
+    }
+  },
+  "explain": true
+}
+
+GET get-group/default/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "description": "elasticsearch"
+        }
+      },
+      "functions": [
+
+      ]
+    }
+  }
+}
+
+GET get-event/default/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "description": "elasticsearch"
+        }
+      },
+      "functions": [
+        {
+          "weight": 1.5,
+          "filter": {"term": {"description": "hadoop"}}
+        }
+      ]
+    }
+  }
+}
+
+GET get-event/default/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "match": {
+          "description": "elasticsearch"
+        }
+      },
+      "functions": [
+        {
+          "weight": 5,
+          "filter": {"term": {
+            "description": "logstash"
+          }}
+        },
+        {
+          "weight": 2,
+          "filter": {"term": {
+            "description": "hadoop"
+          }}
+        }
+      ]
+    }
+  }
+}
