@@ -1,1 +1,2 @@
-# Search Suggestion
+# Search Suggestion  
+docker-compose up  
