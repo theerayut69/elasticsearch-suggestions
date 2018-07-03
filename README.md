@@ -13,3 +13,5 @@ $ curl -H "content-type: application/json" -XPOST "http://localhost:9200/product
 ```
 $ curl "http://localhost:9200/product/default/_search?q=basil&pretty"  
 ```
+
+![pictur](images/kibana_picture.png)
